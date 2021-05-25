@@ -58,6 +58,7 @@ if __name__ == "__main__":
         pickle_dataset = []
 
     count = 0
+    l = ['length']
     with open(args.scp, 'r') as fi:
         lines = fi.readlines()
         for line in tqdm(lines):
@@ -67,8 +68,8 @@ if __name__ == "__main__":
             weight = weight_dict[key]
             feature = kaldi_io.read_mat(value)
             feature = np.asarray(feature)
-
-            if feature.shape[0] < ctc_len(label):
+            l.append(feature.shape[0])
+            if feature.shape[0]//4 < ctc_len(label) or feature.shape[0] > 1500:
                 count += 1
                 continue
 
@@ -83,3 +84,5 @@ if __name__ == "__main__":
     if args.format == "pickle":
         with open(args.output_path, 'wb') as fo:
             pickle.dump(pickle_dataset, fo)
+    with open(f'{args.scp}.csv', 'w') as fo:
+        fo.write('\n'.join([str(x) for x in l]))
