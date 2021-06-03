@@ -5,6 +5,9 @@
 nbpe=$1
 bpemode=$2
 textdir=$3
+train_set=$4
+dev_set=$5
+test_set=$6
 
 dir=data/local/dict_bpe
 mkdir -p $dir
@@ -18,7 +21,7 @@ set -euo pipefail
 # use all the text data to generate bpe units
 
 # remove puncuations of training text
-cat data/train_de/text | cut -f 2- -d " " - | sed 's/"//g' | sed 's/,//g' | sed 's/\.//g' | sed 's/\?//g' | \
+cat data/$train_set/text | cut -f 2- -d " " - | sed 's/"//g' | sed 's/,//g' | sed 's/\.//g' | sed 's/\?//g' | \
     sed 's/\!//g' | sed 's/…//g' | sed 's/;//g' | sed 's/  / /g' | sed 's/  / /g' | sed 's/ $//g' | sed "s/’/'/g" > $dir/input.txt
 #
 # train sentencepiece model using training text
@@ -38,7 +41,9 @@ python3 local/spm_train.py --input=$dir/input.txt --vocab_size=${nbpe} --bos_id=
 for set in train dev test; do
     mkdir -p $textdir/$set
     curdir=$textdir/$set
-    cp -r data/${set}_de/text $curdir
+    tmp_set=`eval echo '$'${set}_set`
+    echo $tmp_set
+    cp data/$tmp_set/text $curdir
     cat  $curdir/text | cut -f 2- -d " " - | sed 's/"//g' | sed 's/,//g' | sed 's/\.//g' | sed 's/\?//g' | sed 's/\!//g' \
         | sed 's/…//g' | sed 's/;//g' | sed 's/  / /g' | sed 's/  / /g' | sed 's/ $//g' | sed "s/’/'/g" > $curdir/text.tmp
     awk '{print $1}' $curdir/text > $curdir/text.uttid
